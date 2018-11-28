@@ -37,11 +37,8 @@ import click
 from click import ClickException
 from dialog import Dialog
 
-from .util import BibCLIContext
-
-
-# Custom decorator that uses BibCLIContext
-pass_context = click.make_pass_decorator(BibCLIContext, ensure=True)
+from .command.diff import diff
+from .util import pass_context
 
 
 @click.group(help=__doc__)
@@ -537,19 +534,4 @@ def queue(ctx):
           sep='\n', end='\n\n')
 
 
-@cli.command()
-@click.option('--exclude-from', 'exclude', type=click.File('r'),
-              help='Also omit keys from this file; one per line.')
-@click.argument('other', type=click.Path(exists=True))
-@pass_context
-def diff(ctx, other, exclude):
-    """Print keys in the database but not in OTHER."""
-    keys = set(ctx.db.entries_dict.keys())
-
-    other_db = ctx.read_database(other)
-    keys -= set(other_db.entries_dict.keys())
-
-    if exclude:
-        keys -= set(exclude.read().split())
-
-    print(*sorted(keys), sep='\n')
+cli.add_command(diff)

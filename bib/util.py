@@ -3,6 +3,7 @@ import re
 
 import bibtexparser
 from bibtexparser.bparser import BibTexParser
+import click
 import yaml
 
 
@@ -97,3 +98,7 @@ class BibCLIContext:
                                                  self.keywords.update,
                                                  self.config)
         return bibtexparser.load(open(filename, 'r'), parser=parser)
+
+
+# Custom decorator that uses BibCLIContext
+pass_context = click.make_pass_decorator(BibCLIContext, ensure=True)
