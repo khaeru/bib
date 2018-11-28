@@ -5,12 +5,12 @@ Licensed under the GNU GPL v3.
 
 `bib` provides commands to work with BibTeX databases. To specify the default database, use the `--database` command-line option, or set a configuration file (below).
 
- - `check_files`: check for the existence of file paths pointed to by entry `localfile` fields.
+ - `check-files`: check for the existence of file paths pointed to by entry `localfile` fields.
  - `curl`: return args for `curl -K -`, using entry `url` fields.
  - `diff OTHER`: display entries in the database but not in `OTHER`.
  - `import PATHS`: read new entries into the database from `.bib` files in `PATHS`.
  - `list FIELD`: list all unique values of `FIELD`.
- - `note_template`: return a (Zim)[] note template for entry `KEY`.
+ - `note-template`: return a (Zim)[] note template for entry `KEY`.
  - `read KEY`: open the local file for entry `KEY`.
  - `queue`: display a reading queue.
 
