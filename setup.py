@@ -10,7 +10,7 @@ setup(
     author_email='mail@paul.kishimoto.name',
     url='https://github.com/khaeru/bib',
     packages=find_packages(),
-    setup_requires=['bibtexparser', 'click', 'dialog', 'yaml'],
+    setup_requires=['bibtexparser', 'click', 'pythondialog', 'PyYAML'],
     entry_points='''
         [console_scripts]
         bib=bib:cli
