@@ -1,4 +1,3 @@
-from collections import namedtuple
 from copy import deepcopy
 from datetime import datetime
 from glob import iglob
@@ -9,11 +8,10 @@ import readline
 
 from bibtexparser.customization import author
 from bibtexparser.bparser import BibTexParser
-from bibtexparser.bwriter import BibTexWriter
 import click
 from dialog import Dialog
 
-from ..util import pass_context
+from ..util import pass_context, to_string
 
 
 def _select_file(key, path):
@@ -165,18 +163,6 @@ def import_command(ctx, paths):
     parser = BibTexParser()
     parser.homogenise_fields = False
     parser.customization = _add_clean
-
-    # A writer for converting entries back to strings
-    writer = BibTexWriter()
-    writer.indent = '\t'
-
-    # namedtuple to imitate a class with these attributes
-    _dbnt = namedtuple('bdb', ['comments', 'entries', 'preambles', 'strings'])
-
-    def to_string(entry):
-        """Convert [entry] to a string."""
-        # Create a fake 'database' with only one entry.
-        return writer.write(_dbnt([], [entry], [], {}))
 
     # Iterate over files in the add_dir
     for fn in chain(*map(iglob, paths)):

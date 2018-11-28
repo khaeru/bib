@@ -2,7 +2,9 @@ import os
 import re
 
 import bibtexparser
+from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
+from bibtexparser.bwriter import BibTexWriter
 import click
 import yaml
 
@@ -56,10 +58,9 @@ class BibItem(dict):
         bibtexparser.bwriter.BibTexWriter requires all records in an item
         to be strings.
         """
-        try:
-            self['keywords'] = ';'.join(self['keywords'])
-        except KeyError:
-            pass
+        for field in ('keywords', 'localfile'):
+            if isinstance(self.get(field, None), list):
+                self[field] = '; '.join(self[field])
 
 
 class BibCLIContext:
@@ -102,3 +103,22 @@ class BibCLIContext:
 
 # Custom decorator that uses BibCLIContext
 pass_context = click.make_pass_decorator(BibCLIContext, ensure=True)
+
+
+# A writer for converting entries back to strings
+writer = BibTexWriter()
+writer.indent = '\t'
+
+# A database for converting entries back to strings
+db = BibDatabase()
+
+
+def to_string(entry_or_entries):
+    """Convert *entry_or_entries* to a string."""
+    # Create a fake 'database' with only one entry.
+    db.entries = (entry_or_entries if isinstance(entry_or_entries, list) else
+                  [entry_or_entries])
+
+    [entry.stringify() for entry in db.entries]
+
+    return writer.write(db)

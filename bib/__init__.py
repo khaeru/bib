@@ -27,6 +27,7 @@ import click
 from .command.check_files import check_files
 from .command.curl import curl
 from .command.diff import diff
+from .command.export import export
 from .command.import_ import import_command
 from .command.list import list_command
 from .command.note_template import note_template
@@ -51,6 +52,7 @@ def cli(ctx, database, verbose, path):
 cli.add_command(check_files)
 cli.add_command(curl)
 cli.add_command(diff)
+cli.add_command(export)
 cli.add_command(import_command)
 cli.add_command(list_command)
 cli.add_command(note_template)
