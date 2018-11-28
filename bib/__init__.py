@@ -34,10 +34,11 @@ from bibtexparser.customization import author
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.bwriter import BibTexWriter
 import click
-from click import ClickException
 from dialog import Dialog
 
 from .command.diff import diff
+from .command.queue import queue
+from .command.read import read_command
 from .util import pass_context
 
 
@@ -464,74 +465,6 @@ def note_template(ctx, key):
     print(note_string.format(**values))
 
 
-@cli.command('read')
-@click.argument('key')
-@pass_context
-def read_command(ctx, key):
-    """Open the 'localfile'(s) associated with KEY."""
-    entry = ctx.db.entries_dict.get(key, None)
-
-    if entry is None:
-        raise ClickException("no entry with key '{}'.".format(key))
-    elif 'localfile' not in entry:
-        raise ClickException("entry '{}' has no localfile field."
-                             .format(key))
-
-    for fn in entry['localfile']:
-        fn = os.path.join(ctx.config['path'], fn)
-        os.system('xdg-open "{}"'.format(fn))
-
-
-@cli.command()
-@pass_context
-def queue(ctx):
-    """Display a reading queue.
-
-    Entries matching the configuration value are considered to be part of a
-    reading queue, sorted from lowest to highest according to priority.
-
-    With --verbose/-v, *queue* also displays list of entries with no
-    keywords; and with keywords but no queue match.
-
-
-    Configuration File Keys
-
-    \b
-    queue:
-      include: Required. A regular expression to match against values in each
-               entry's 'keywords' field. Must contain a named group 'priority'
-               that gives a sortable value indicating queue priority.
-    """
-    r = re.compile(ctx.cmd_config('queue').get('include', None))
-
-    sets = {'no_kw': set(), 'no_queue': set(), 'to_read': list()}
-
-    for e in ctx.db.entries:
-        if 'keywords' in e:
-            matches = list(filter(None,
-                                  [r.match(kw) for kw in e['keywords']]))
-            if len(matches) > 1:
-                assert False
-            elif len(matches) == 1:
-                pri = matches[0].groupdict()['priority']
-                sets['to_read'].append(('({0}) {1[ID]}: {1[title]}\n\t'
-                                        '{1[localfile]}').format(pri, e))
-            else:
-                sets['no_queue'].add(e['ID'])
-        else:
-            sets['no_kw'].add(e['ID'])
-
-    if ctx.verbose:
-        print('No keywords: %d entries' % len(sets['no_kw']),
-              '\t' + ' '.join(sorted(sets['no_kw'])),
-              '',
-              'Some keywords: %d entries' % len(sets['no_queue']),
-              '\t' + ' '.join(sorted(sets['no_queue'])),
-              sep='\n', end='\n\n')
-
-    print('Read next:',
-          '\n'.join(sorted(sets['to_read'])),
-          sep='\n', end='\n\n')
-
-
 cli.add_command(diff)
+cli.add_command(queue)
+cli.add_command(read_command)
