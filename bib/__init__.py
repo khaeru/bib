@@ -36,7 +36,11 @@ from bibtexparser.bwriter import BibTexWriter
 import click
 from dialog import Dialog
 
+# TODO do this dynamically
+from .command.curl import curl
 from .command.diff import diff
+from .command.list import list_command
+from .command.note_template import note_template
 from .command.queue import queue
 from .command.read import read_command
 from .util import pass_context
@@ -386,85 +390,9 @@ def check_files(ctx, fmt):
            files)
 
 
-@cli.command()
-@pass_context
-def curl(ctx):
-    """Return args for `curl -K -` on 'url' fields.
-
-    For each entry in the database, lines are output that specify the curl
-    arguments --url, --output, and --time-cond. This output can be piped
-    to
-    """
-    template = '\n'.join(['url="{0}"', 'output="{1}"', 'time-cond {1} '])
-
-    for e in ctx.db.entries:
-        url = e.get('url', None)
-        localfile = e.get('localfile', None)
-        if url is None or localfile is None:
-            continue
-        print(template.format(url, localfile[0]))
-
-
-@cli.command('list')
-@click.argument('field')
-@click.option('--sort', is_flag=True)
-@pass_context
-def list_command(ctx, field, sort):
-    """List all unique values of FIELD."""
-    values = set()
-    for e in ctx.db.entries:
-        value = e.get(field, None)
-        if value is None:
-            continue
-        elif not isinstance(value, list):
-            value = [value]
-        values |= set(value)
-
-    if sort:
-        values = sorted(values)
-
-    print('\n'.join(values))
-
-
-note_string = """Content-Type: text/x-zim-wiki
-Wiki-Format: zim 0.4
-Creation-Date: {date}
-
-====== {author} {year} ======
-//{title}//
-Created {date_text}
-
-"""
-
-
-@cli.command()
-@click.argument('key')
-@pass_context
-def note_template(ctx, key):
-    """Return a Zim note template for KEY."""
-    from datetime import datetime, timezone
-    entry = author(ctx.db.entries_dict.get(key, None))
-
-    def surname(index):
-        return entry['author'][index].split(',')[0]
-
-    now = datetime.now(timezone.utc).astimezone().replace(microsecond=0)
-
-    values = {
-        'date': now.isoformat(),
-        'date_text': now.strftime('%A %d %B %Y'),
-        'year': entry['year'],
-        'title': entry['title'],
-        }
-
-    if len(entry['author']) > 2:
-        values['author'] = surname(0) + ' et al.'
-    else:
-        values['author'] = '{} & {}'.format(surname(0), surname(1))
-
-    print(note_string.format(**values))
-
-
+cli.add_command(curl)
 cli.add_command(diff)
+cli.add_command(list_command)
+cli.add_command(note_template)
 cli.add_command(queue)
 cli.add_command(read_command)
