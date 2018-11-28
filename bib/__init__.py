@@ -646,7 +646,3 @@ def diff(ctx, other, exclude):
         keys -= set(exclude.read().split())
 
     print(*sorted(keys), sep='\n')
-
-
-if __name__ == '__main__':
-    cli()
