@@ -1,7 +1,7 @@
+import mmap
 import os
 import re
 
-import bibtexparser
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.bwriter import BibTexWriter
@@ -10,29 +10,32 @@ import yaml
 
 
 DEFAULT_CONFIG = {
-    'kw_sep': ',|;',
-    'lf_sep': ';',
+    'keywords_sep': ',|;',
+    'localfile_sep': ';',
     }
 
 
 class BibItem(dict):
-    """Biliography items."""
+    """Biliography item.
 
+    bibtexparser uses dict() internally. This class adds some simple
+    functionality.
+
+    """
     def __init__(self, record, add_keywords, config):
-        # Parse 'keywords' to a list
-        if 'keywords' in record:
-            record['keywords'] = [kw.strip() for kw in
-                                  re.split(config['kw_sep'],
-                                           record['keywords'])]
-            add_keywords(record['keywords'])
+        # Split some fields to lists
+        for field in ('keywords', 'localfile'):
+            try:
+                separators = config[field + '_sep']
+                record[field] = [part.strip() for part in
+                                 re.split(separators, record[field])]
+            except KeyError:
+                pass
 
-        # Parse 'localfile' to a list
-        if 'localfile' in record:
-            record['localfile'] = [lf.strip() for lf in
-                                   re.split(config['lf_sep'],
-                                            record['localfile'])]
+        add_keywords(record.get('keywords', []))
 
         dict.__init__(self, record)
+
         self.type = self['ENTRYTYPE']
 
     @property
@@ -53,7 +56,7 @@ class BibItem(dict):
             return os.path.relpath(self['localfile'])
 
     def stringify(self):
-        """Convert all entries to strings.
+        """Convert all fields to strings.
 
         bibtexparser.bwriter.BibTexWriter requires all records in an item
         to be strings.
@@ -63,11 +66,106 @@ class BibItem(dict):
                 self[field] = '; '.join(self[field])
 
 
+class LazyBibDatabase(BibDatabase):
+    """Lazy-loading subclass of bibtexparser.bibdatabase.BibDatabase.
+
+    To improve performance on large files, this class indexes (:func:`_index`)
+    the start and end locations of each entry in the file, but does not read or
+    parse them. When :func:`get_entry` is called, only the single entry is read
+    and parsed.
+
+    This functionality should be pushed upstream to bibtexparser, but that
+    package is (as of 2018-11-29) unmaintained…
+
+    """
+    entry_re = re.compile(rb'^\s*@([^{]*){([^,}]*)', re.MULTILINE)
+
+    def __init__(self, path, config):
+        super(LazyBibDatabase, self).__init__()
+
+        # Database file
+        self._file = open(path, 'rb')
+
+        # Keywords index
+        self.keywords = set()
+
+        # Index the database
+        self._index()
+
+        # Set up a parser to be used by _read_entry
+        self._parser = BibTexParser(
+            homogenize_fields=False,
+            ignore_nonstandard_types=False,
+            customization=lambda r: BibItem(r, self.keywords.update, config),
+            )
+
+    def _index(self):
+        """Index the database."""
+        # Use a mmap to avoid loading the entire file into memory
+        m = mmap.mmap(self._file.fileno(), 0, access=mmap.ACCESS_READ)
+
+        # Iterate through matches of the regular expression for entries
+        breaks = []
+        for match in self.entry_re.finditer(m):
+            # Store (start, entry type, entry ID)
+            info = tuple([match.start()] +
+                         list(map(bytes.decode, match.groups())))
+            breaks.append(info)
+
+        del m
+
+        # Convert the breaks to an index
+        self._entries_index = {}
+        for idx, (start, entrytype, id) in enumerate(breaks):
+            if entrytype in ('comment'):
+                # Don't index comments
+                continue
+
+            try:
+                # Current entry extends to the start of the next
+                self._entries_index[id] = (start, breaks[idx+1][0] - start)
+            except IndexError:
+                # Last entry in file, length of -1 will make read() gobble
+                self._entries_index[id] = (start, -1)
+
+    def _read_entry(self, key):
+        """Actually read and parse the entry with ID *key*."""
+        # Locate the start of the entry
+        start, length = self._entries_index[key]
+        self._file.seek(start)
+
+        # Parse the entry
+        self._parser.parse(self._file.read(length))
+
+        # bibtexparser.bparser.BibTexParser uses an internal BibDatabase that
+        # is not emptied for successive calls to parse(). Empty it.
+        entry = self._parser.bib_database.entries.pop()
+        assert len(self._parser.bib_database.entries) == 0
+
+        # Store for later access
+        self._entries_dict[entry['ID']] = entry
+
+        return entry
+
+    def get_entry(self, key):
+        """Retrieve the entry with ID *key*."""
+        try:
+            return self._entries_dict[key]
+        except KeyError:
+            return self._read_entry(key)
+
+    def iter_entry_keys(self):
+        """Return an iterator over entry IDs.
+
+        This is much faster than in BibDatabase, because the entries are not
+        fully parsed. Use :func:`get_entry` to retrieve the actual entry.
+        """
+        return self._entries_index.keys()
+
+
 class BibCLIContext:
     def __init__(self):
         self.config = DEFAULT_CONFIG
-
-        self.keywords = set()
 
     def init(self, database, verbose, path):
         try:
@@ -83,22 +181,11 @@ class BibCLIContext:
 
         self.verbose = verbose
 
-        # Parse the database
-        self.database_fn = os.path.join(path, self.config['database'])
-        self.db = self.read_database(self.database_fn)
+        self.db = LazyBibDatabase(os.path.join(path, self.config['database']),
+                                  self.config)
 
     def cmd_config(self, cmd):
         return self.config.get(cmd, {})
-
-    def read_database(self, filename):
-        # Set up the BibTeX parser
-        parser = BibTexParser()
-        parser.homogenise_fields = False
-        parser.ignore_nonstandard_types = False
-        parser.customization = lambda r: BibItem(r,
-                                                 self.keywords.update,
-                                                 self.config)
-        return bibtexparser.load(open(filename, 'r'), parser=parser)
 
 
 # Custom decorator that uses BibCLIContext

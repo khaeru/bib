@@ -1,13 +1,15 @@
-#!/usr/bin/env python3
-"""\b
-BibTeX database utilities
-© 2016–2018 Paul Natsuo Kishimoto <mail@paul.kishimoto.name>
-Licensed under the GNU GPL v3.
+"""Utility for BibTeX databases.
 
-Reads a file .bibpy.yaml in the current directory or in PATH that may contain
-general or command-specific keys. The only general configuration key is:
+An optional configuration file `.bibpy.yaml` is read in:
 
-database: same as the --database option.
+\b
+- the path given by `--path` command-line option,
+- the current directory, or
+- the directory given by the `BIBPY_PATH` environment variable.
+
+The only general configuration key is:
+
+    database: path/to/database.bib  # same as the --database option
 
 The following commands have command-specific keys. For these, use a top-level
 key with the command name, and then place command-specific keys underneath. Use
@@ -18,9 +20,6 @@ key with the command name, and then place command-specific keys underneath. Use
 - import
 - queue
 """
-# TODO speed up loading/defer reading of the database until it's needed/read in
-#      a separate thread
-
 import click
 
 # TODO do this dynamically
@@ -33,16 +32,17 @@ from .command.list import list_command
 from .command.note_template import note_template
 from .command.queue import queue
 from .command.read import read_command
+
 from .util import pass_context
 
 
 @click.group(help=__doc__)
-@click.option('--database', type=click.Path('r'),
-              help='Filename for the BibTeX database.')
-@click.option('--verbose', is_flag=True, help='More detailed output.')
-@click.option('--path', 'path', type=click.Path('r'),
+@click.option('--database', type=click.Path('r'), metavar='FILE',
+              help='Filename of the BibTeX database.')
+@click.option('--verbose', is_flag=True, help='Print detailed output.')
+@click.option('--path', type=click.Path('r'), metavar='DIR',
               envvar='BIBPY_PATH', default='.',
-              help='Path to the folder containing the database.')
+              help='Directory containing the database and/or .bibpy.yaml.')
 @pass_context
 def cli(ctx, database, verbose, path):
     # Initialize the context (load the database)
