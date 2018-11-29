@@ -184,7 +184,9 @@ class BibCLIContext:
             pass
 
         if database:
-            self.config['database'] = Path(database)
+            self.config['database'] = Path(database).resolve()
+
+        self.config['database'] = self.config['path'] / self.config['database']
 
         self.verbose = verbose
 
@@ -213,6 +215,9 @@ def to_string(entry_or_entries):
     db.entries = (entry_or_entries if isinstance(entry_or_entries, list) else
                   [entry_or_entries])
 
-    [entry.stringify() for entry in db.entries]
+    try:
+        [entry.stringify() for entry in db.entries]
+    except AttributeError:
+        pass
 
     return writer.write(db)

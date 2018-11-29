@@ -138,13 +138,12 @@ def clean_str(s):
 @click.argument('paths', nargs=-1, type=click.Path(exists=True))
 @pass_context
 def import_command(ctx, paths):
-    """(DEV) Read new entries into the database.
+    """Read new entries into the database.
 
     PATHS may be zero or more .bib files or directories containing .bib files
     to import.
 
-
-    Configuration File Keys
+    Configuration file keys
 
     \b
     import:
@@ -186,9 +185,10 @@ def import_command(ctx, paths):
             key = input_with_prefill('\nEnter key for imported entry '
                                      '(blank to skip, [Q]uit): ',
                                      guess_key(e))
-            if key in ctx.db.entries_dict:
+            try:
+                ctx.db.get_entry(key)
                 print('Key already exists.')
-            else:
+            except KeyError:
                 break
 
         if key == '':
@@ -209,20 +209,20 @@ def import_command(ctx, paths):
             e['localfile'] = os.path.basename(fn_local)
 
         # Append the entry to the database
-        with open(ctx.database_fn, 'a') as f_imported:
-            f_imported.write('\n')
-            f_imported.write(to_string(e))
+        with open(ctx.config['database'], 'a') as f_db:
+            f_db.write('\n')
+            f_db.write(to_string(e))
 
         # Write the abstract
         if abstract:
-            fn_abstract = os.path.join(ctx.config['path'], 'abstracts',
-                                       '%s.tex' % key)
+            fn_abstract = ctx.config['path'] / 'abstracts' / ('%s.tex' % key)
             with open(fn_abstract, 'x') as f_abstract:
                 f_abstract.write(abstract)
 
         # Move the full text file
         if fn_local:
-            os.system('mv -n "{}" "{}"'.format(fn_local, e['localfile']))
+            os.system('mv -n "{}" "{}"'.format(fn_local, ctx.config['path'] /
+                                               e['localfile']))
 
         # Remove the imported entry file
         remove = input('\nRemove imported file %s ([Y]es, [enter] to '
