@@ -1,5 +1,6 @@
 import mmap
 import os
+from pathlib import Path
 import re
 
 from bibtexparser.bibdatabase import BibDatabase
@@ -42,18 +43,12 @@ class BibItem(dict):
     def has_file(self):
         return 'localfile' in self
 
-    @property
-    def file_exists(self):
-        if type(self['localfile']) == list:
-            return all([os.path.exists(lf) for lf in self['localfile']])
-        else:
-            return os.path.exists(self['localfile'])
+    def file_exists(self, root=Path()):
+        return all([(root / lf).exists() for lf in self['localfile']])
 
-    def file_rel_path(self):
-        if type(self['localfile']) == list:
-            return [os.path.relpath(lf) for lf in self['localfile']]
-        else:
-            return os.path.relpath(self['localfile'])
+    def file_rel_path(self, root=Path()):
+        return [(root / lf).relative_to(Path.cwd())
+                for lf in self['localfile']]
 
     def stringify(self):
         """Convert all fields to strings.
@@ -90,6 +85,7 @@ class LazyBibDatabase(BibDatabase):
         self.keywords = set()
 
         # Index the database
+        self._all_loaded = False
         self._index()
 
         # Set up a parser to be used by _read_entry
@@ -147,6 +143,17 @@ class LazyBibDatabase(BibDatabase):
 
         return entry
 
+    def iter_entries(self):
+        return iter(self._generate_entries())
+
+    def _generate_entries(self):
+        if self._all_loaded:
+            yield from self._entries_dict.values()
+        else:
+            for key in self.iter_entry_keys():
+                yield self.get_entry(key)
+            self._all_loaded = True
+
     def get_entry(self, key):
         """Retrieve the entry with ID *key*."""
         try:
@@ -168,16 +175,16 @@ class BibCLIContext:
         self.config = DEFAULT_CONFIG
 
     def init(self, database, verbose, path):
+        self.config['path'] = Path(path)
         try:
-            config_fn = os.path.join(path, '.bibpy.yaml')
+            config_fn = self.config['path'] / '.bibpy.yaml'
             with open(config_fn) as f:
                 self.config.update(yaml.load(f))
-            self.config['path'] = path
         except FileNotFoundError:
             pass
 
         if database:
-            self.config['database'] = database
+            self.config['database'] = Path(database)
 
         self.verbose = verbose
 

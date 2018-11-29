@@ -9,13 +9,13 @@ Licensed under the GNU General Public License, version 3.
  - `curl`: return args for `curl -K -`, using entry `url` fields.
  - `diff OTHER`: display entries in the database but not in `OTHER`.
  - `export KEYS`: print out a subset of the entries in the database.
- - `import PATHS`: read new entries into the database from `.bib` files in `PATHS`.
- - `list FIELD`: list all unique values of `FIELD`.
- - `note-template`: return a (Zim)[] note template for entry `KEY`.
+ - `import PATHS`: interactively read new entries into the database from `.bib` files found in `PATHS`.
+ - `list FIELD`: list all unique values appearing in `FIELD` (e.g. 'keywords') across the entire database.
+ - `note-template`: return a (Zim)[http://zim-wiki.org] note template for entry `KEY`.
  - `read KEY`: open the local file for entry `KEY`.
  - `queue`: display a reading queue.
 
-Use `bib --help` for more detailed documentation.
+Use `bib --help` and `bib COMMAND --help` for more detailed documentation.
 
 ## Configuration
 

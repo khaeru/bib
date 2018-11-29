@@ -16,7 +16,7 @@ def _check_files_plain(ok, other, missing, broken, files):
           '\t' + ' '.join(sorted(other)),
           '',
           "Missing: %d entries w/o 'localfile' key" % len(missing),
-          '\t' + '\n\t'.join(sorted(missing)),
+          '\t' + ' '.join(sorted(missing)),
           '',
           "Broken: %d entries w/ missing 'localfile'" % len(broken),
           '\n'.join(['\t{}\t→\t{}'.format(*e) for e in sorted(broken)]),
@@ -42,17 +42,17 @@ def _check_files_csv(ok, other, missing, broken, files):
 def check_files(ctx, fmt):
     """Check files listed in 'localfiles' fields.
 
-    Configuration File Keys
+    Configuration file keys:
 
     \b
     check_files:
-      format: same as the --format option.
-      ignore: list of glob patterns of paths to ignore.
-      filter: list of triples, each with the following keys:
+      format: Same as the --format option.
+      ignore: List of glob patterns of paths to ignore.
+      filter: List of triples, each with the following keys:
         field: BibLaTeX data model field, eg. 'keywords'
-        value: string value to match
-        sort: one of 'ok', 'other', 'missing' or 'broken': the list in which to
-              place matching entries
+        value: String value to match
+         sort: One of 'ok', 'other', 'missing' or 'broken': the list in which
+               to place matching entries.
     """
     # Get configuration options
     options = ctx.cmd_config('check_files')
@@ -68,15 +68,16 @@ def check_files(ctx, fmt):
 
     # Get the set of files in the current directory
     r = re.compile('(' + ')|('.join(ignore) + ')')
-    files = filterfalse(os.path.isdir, iglob('**', recursive=True))
+    files = filterfalse(os.path.isdir,
+                        iglob(str(ctx.config['path'] / '**'), recursive=True))
     files = sorted(filterfalse(r.search, files))
 
     # Iterate through database entries
-    for e in ctx.db.entries:
+    for e in ctx.db.iter_entries():
         if e.has_file:
-            if e.file_exists:
+            if e.file_exists(ctx.config['path']):
                 sets['ok'].add(e['ID'])
-                for fn in e.file_rel_path():
+                for fn in e.file_rel_path(ctx.config['path']):
                     try:
                         files.remove(fn)
                     except ValueError:
