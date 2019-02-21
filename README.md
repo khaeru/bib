@@ -1,5 +1,5 @@
 # Command-line utility for BibTeX databases
-© 2016–2018 Paul Natsuo Kishimoto (<mail@paul.kishimoto.name>)
+© 2016–2019 Paul Natsuo Kishimoto (<mail@paul.kishimoto.name>)
 
 Licensed under the GNU General Public License, version 3.
 
