@@ -69,8 +69,7 @@ class LazyBibDatabase(BibDatabase):
     parse them. When :func:`get_entry` is called, only the single entry is read
     and parsed.
 
-    This functionality should be pushed upstream to bibtexparser, but that
-    package is (as of 2018-11-29) unmaintained…
+    This functionality should be pushed upstream to bibtexparser.
 
     """
     entry_re = re.compile(rb'^\s*@([^{]*){([^,}]*)', re.MULTILINE)

@@ -8,6 +8,7 @@ import readline
 
 from bibtexparser.customization import author
 from bibtexparser.bparser import BibTexParser
+from pyparsing import ParseException
 import click
 from dialog import Dialog
 
@@ -104,9 +105,10 @@ def input_with_prefill(prompt, text):
 
 
 def clean_str(s):
-    # Add a trailing comma on the last entry:
-    # https://github.com/sciunto-org/python-bibtexparser/issues/47
-    s = re.sub(r'([^,])(\s*}\s*)\Z', r'\1,\2', s)
+    # # Add a trailing comma on the last entry:
+    # # https://github.com/sciunto-org/python-bibtexparser/issues/47
+    # s = re.sub(r'([^,])(\s*}\s*)\Z', r'\1,\2', s)
+
     # Compress multiple 'keywords'
     parts = re.split(r'(keywords)\s=\s[{"]([^}"]*)[}"],', s)
     result = ''
@@ -171,10 +173,16 @@ def import_command(ctx, paths):
         # Read and parse the file
         with open(fn, 'r') as f:
             s = f.read()
-            e = parser.parse(clean_str(s)).entries[-1]
-            abstract = e.pop('abstract', None)
+            print('Raw:', s)
 
-        print('Raw:', s)
+        try:
+            e = parser.parse(clean_str(s)).entries[-1]
+        except ParseException:
+            print(clean_str(s))
+            raise
+
+        abstract = e.pop('abstract', None)
+
         print('Entry:', to_string(e), sep='\n\n')
 
         if abstract is not None:

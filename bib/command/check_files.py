@@ -37,7 +37,7 @@ def _check_files_csv(ok, other, missing, broken, files):
 
 @click.command()
 @click.option('--format', 'fmt', type=click.Choice(['plain', 'csv']),
-              default=None)
+              default=None, help="Output format.")
 @pass_context
 def check_files(ctx, fmt):
     """Check files listed in 'localfiles' fields.
