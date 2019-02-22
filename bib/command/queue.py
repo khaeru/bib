@@ -25,33 +25,23 @@ def queue(ctx):
                entry's 'keywords' field. Must contain a named group 'priority'
                that gives a sortable value indicating queue priority.
     """
-    r = re.compile(ctx.cmd_config('queue').get('include', None))
+    r = re.compile(ctx.cmd_config('queue')['include'])
 
-    sets = {'no_kw': set(), 'no_queue': set(), 'to_read': list()}
+    to_read = list()
 
-    for e in ctx.db.entries:
-        if 'keywords' in e:
-            matches = list(filter(None,
-                                  [r.match(kw) for kw in e['keywords']]))
-            if len(matches) > 1:
-                assert False
-            elif len(matches) == 1:
-                pri = matches[0].groupdict()['priority']
-                sets['to_read'].append(('({0}) {1[ID]}: {1[title]}\n\t'
-                                        '{1[localfile]}').format(pri, e))
-            else:
-                sets['no_queue'].add(e['ID'])
-        else:
-            sets['no_kw'].add(e['ID'])
+    for e in filter(lambda e: 'keywords' in e, ctx.db.iter_entries(True)):
+        matches = list(filter(None, [r.match(kw) for kw in e['keywords']]))
 
-    if ctx.verbose:
-        print('No keywords: %d entries' % len(sets['no_kw']),
-              '\t' + ' '.join(sorted(sets['no_kw'])),
-              '',
-              'Some keywords: %d entries' % len(sets['no_queue']),
-              '\t' + ' '.join(sorted(sets['no_queue'])),
-              sep='\n', end='\n\n')
+        if len(matches) > 1:
+            print('Error: entry contains multiple queue priority keywords:',
+                  e)
+            return
+        elif len(matches) == 1:
+            to_read.append('{0} {1[ID]}: {2}'
+                           .format(matches[0].group('priority'),
+                                   e, e['title'].strip('{}')))
 
-    print('Read next:',
-          '\n'.join(sorted(sets['to_read'])),
-          sep='\n', end='\n\n')
+    if len(to_read):
+        print('\n'.join(sorted(to_read, reverse=True)), end='\n\n')
+    else:
+        print('Empty reading queue.')
