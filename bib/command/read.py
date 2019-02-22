@@ -11,14 +11,16 @@ from ..util import pass_context
 @pass_context
 def read_command(ctx, key):
     """Open the 'localfile'(s) associated with KEY."""
-    entry = ctx.db.entries_dict.get(key, None)
 
-    if entry is None:
+    try:
+        entry = ctx.db.get_entry(key)
+    except KeyError:
         raise ClickException("no entry with key '{}'.".format(key))
-    elif 'localfile' not in entry:
+
+    try:
+        for fn in entry['localfile']:
+            fn = os.path.join(ctx.config['path'], fn)
+            os.system('xdg-open "{}"'.format(fn))
+    except KeyError:
         raise ClickException("entry '{}' has no localfile field."
                              .format(key))
-
-    for fn in entry['localfile']:
-        fn = os.path.join(ctx.config['path'], fn)
-        os.system('xdg-open "{}"'.format(fn))

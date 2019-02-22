@@ -22,7 +22,7 @@ Created {date_text}
 @pass_context
 def note_template(ctx, key):
     """Return a Zim note template for KEY."""
-    entry = author(ctx.db.entries_dict.get(key, None))
+    entry = author(ctx.db.get_entry(key))
 
     def surname(index):
         return entry['author'][index].split(',')[0]
