@@ -7,6 +7,7 @@ from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.bwriter import BibTexWriter
 import click
+from tqdm import tqdm
 import yaml
 
 
@@ -142,8 +143,13 @@ class LazyBibDatabase(BibDatabase):
 
         return entry
 
-    def iter_entries(self):
-        return iter(self._generate_entries())
+    def iter_entries(self, progress=False):
+        if progress:
+            return tqdm(self._generate_entries(),
+                        total=len(self._entries_index),
+                        leave=False)
+        else:
+            return iter(self._generate_entries())
 
     def _generate_entries(self):
         if self._all_loaded:
