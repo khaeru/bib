@@ -41,8 +41,10 @@ def note_template(entry):
 
     if len(entry['author']) > 2:
         values['author'] = surname(0) + ' et al.'
-    else:
+    elif len(entry['author']) == 2:
         values['author'] = '{} & {}'.format(surname(0), surname(1))
+    else:
+        values['author'] = surname(0)
 
     return note_string.format(**values)
 
