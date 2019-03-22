@@ -168,12 +168,12 @@ def import_command(ctx, paths):
     # Iterate over files in the add_dir
     for fn in chain(*map(iglob, paths)):
         os.system('clear')
-        print('Importing', fn, end='\n\n')
+        print('Importing', fn, end=':\n\n')
 
         # Read and parse the file
         with open(fn, 'r') as f:
             s = f.read()
-            print('Raw:', s)
+            print(s, end='\n\n')
 
         try:
             e = parser.parse(clean_str(s)).entries[-1]
@@ -183,16 +183,17 @@ def import_command(ctx, paths):
 
         abstract = e.pop('abstract', None)
 
-        print('Entry:', to_string(e), sep='\n\n')
+        print('Parsed entry:', to_string(e), sep='\n\n')
 
         if abstract is not None:
             print('Abstract:', abstract, sep='\n\n')
 
         # Ask user for a key
         while True:
-            key = input_with_prefill('\nEnter key for imported entry '
-                                     '(blank to skip, [Q]uit): ',
-                                     guess_key(e))
+            key = input_with_prefill(
+                '\nEnter key for imported entry '
+                '([] Skip, [D]elete without importing, [Q]uit): ',
+                guess_key(e))
             try:
                 ctx.db.get_entry(key)
                 print('Key already exists.')
@@ -200,6 +201,9 @@ def import_command(ctx, paths):
                 break
 
         if key == '':
+            continue
+        elif key.lower() == 'd':
+            os.remove(fn)
             continue
         elif key.lower() == 'q':
             break

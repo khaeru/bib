@@ -29,7 +29,6 @@ from .command.diff import diff
 from .command.export import export
 from .command.import_ import import_command
 from .command.list import list_command
-from .command.note_template import note_template
 from .command.queue import queue
 from .command.read import read_command
 
@@ -55,6 +54,5 @@ cli.add_command(diff)
 cli.add_command(export)
 cli.add_command(import_command)
 cli.add_command(list_command)
-cli.add_command(note_template)
 cli.add_command(queue)
 cli.add_command(read_command)
