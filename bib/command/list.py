@@ -10,13 +10,8 @@ from ..util import pass_context
 def list_command(ctx, field, sort):
     """List all unique values of FIELD."""
     values = set()
-    for e in ctx.db.entries:
-        value = e.get(field, None)
-        if value is None:
-            continue
-        elif not isinstance(value, list):
-            value = [value]
-        values |= set(value)
+    for e in filter(lambda e: field in e, ctx.db.iter_entries(True)):
+        values |= set(e[field] if isinstance(e[field], list) else [e[field]])
 
     if sort:
         values = sorted(values)
