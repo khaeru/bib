@@ -104,9 +104,10 @@ class LazyBibDatabase(BibDatabase):
         breaks = []
         for match in self.entry_re.finditer(m):
             # Store (start, entry type, entry ID)
-            info = tuple([match.start()] +
-                         list(map(bytes.decode, match.groups())))
-            breaks.append(info)
+            info = [match.start()] + list(map(bytes.decode, match.groups()))
+            if info[2] == '':
+                info[2] = '<entry without ID at {0}>'.format(*info)
+            breaks.append(tuple(info))
 
         del m
 
