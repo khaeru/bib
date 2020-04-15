@@ -28,7 +28,7 @@ def _select_file(key, path):
     args = dict(
         cancel_label='No file',
         height=lines-10,
-        width=cols,
+        width=cols-2,
         no_shadow=True,
         no_lines=True,
         title='Select a file for entry: {}'.format(key))
