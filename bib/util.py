@@ -187,7 +187,7 @@ class BibCLIContext:
         try:
             config_fn = self.config["path"] / ".bibpy.yaml"
             with open(config_fn) as f:
-                self.config.update(yaml.load(f))
+                self.config.update(yaml.safe_load(f))
         except FileNotFoundError:
             pass
 
