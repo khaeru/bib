@@ -12,9 +12,9 @@ import yaml
 
 
 DEFAULT_CONFIG = {
-    'keywords_sep': ',|;',
-    'localfile_sep': ';',
-    }
+    "keywords_sep": ",|;",
+    "localfile_sep": ";",
+}
 
 
 class BibItem(dict):
@@ -24,32 +24,33 @@ class BibItem(dict):
     functionality.
 
     """
+
     def __init__(self, record, add_keywords, config):
         # Split some fields to lists
-        for field in ('keywords', 'localfile'):
+        for field in ("keywords", "localfile"):
             try:
-                separators = config[field + '_sep']
-                record[field] = [part.strip() for part in
-                                 re.split(separators, record[field])]
+                separators = config[field + "_sep"]
+                record[field] = [
+                    part.strip() for part in re.split(separators, record[field])
+                ]
             except KeyError:
                 pass
 
-        add_keywords(record.get('keywords', []))
+        add_keywords(record.get("keywords", []))
 
         dict.__init__(self, record)
 
-        self.type = self['ENTRYTYPE']
+        self.type = self["ENTRYTYPE"]
 
     @property
     def has_file(self):
-        return 'localfile' in self
+        return "localfile" in self
 
     def file_exists(self, root=Path()):
-        return all([(root / lf).exists() for lf in self['localfile']])
+        return all([(root / lf).exists() for lf in self["localfile"]])
 
     def file_rel_path(self, root=Path()):
-        return [(root / lf).relative_to(Path.cwd())
-                for lf in self['localfile']]
+        return [(root / lf).relative_to(Path.cwd()) for lf in self["localfile"]]
 
     def stringify(self):
         """Convert all fields to strings.
@@ -57,9 +58,9 @@ class BibItem(dict):
         bibtexparser.bwriter.BibTexWriter requires all records in an item
         to be strings.
         """
-        for field in ('keywords', 'localfile'):
+        for field in ("keywords", "localfile"):
             if isinstance(self.get(field, None), list):
-                self[field] = '; '.join(self[field])
+                self[field] = "; ".join(self[field])
 
 
 class LazyBibDatabase(BibDatabase):
@@ -73,13 +74,14 @@ class LazyBibDatabase(BibDatabase):
     This functionality should be pushed upstream to bibtexparser.
 
     """
-    entry_re = re.compile(rb'^\s*@([^{]*){([^,}]*)', re.MULTILINE)
+
+    entry_re = re.compile(rb"^\s*@([^{]*){([^,}]*)", re.MULTILINE)
 
     def __init__(self, path, config):
         super(LazyBibDatabase, self).__init__()
 
         # Database file
-        self._file = open(path, 'rb')
+        self._file = open(path, "rb")
 
         # Keywords index
         self.keywords = set()
@@ -93,7 +95,7 @@ class LazyBibDatabase(BibDatabase):
             homogenize_fields=False,
             ignore_nonstandard_types=False,
             customization=lambda r: BibItem(r, self.keywords.update, config),
-            )
+        )
 
     def _index(self):
         """Index the database."""
@@ -105,8 +107,8 @@ class LazyBibDatabase(BibDatabase):
         for match in self.entry_re.finditer(m):
             # Store (start, entry type, entry ID)
             info = [match.start()] + list(map(bytes.decode, match.groups()))
-            if info[2] == '':
-                info[2] = '<entry without ID at {0}>'.format(*info)
+            if info[2] == "":
+                info[2] = "<entry without ID at {0}>".format(*info)
             breaks.append(tuple(info))
 
         del m
@@ -114,13 +116,13 @@ class LazyBibDatabase(BibDatabase):
         # Convert the breaks to an index
         self._entries_index = {}
         for idx, (start, entrytype, id) in enumerate(breaks):
-            if entrytype in ('comment'):
+            if entrytype in ("comment"):
                 # Don't index comments
                 continue
 
             try:
                 # Current entry extends to the start of the next
-                self._entries_index[id] = (start, breaks[idx+1][0] - start)
+                self._entries_index[id] = (start, breaks[idx + 1][0] - start)
             except IndexError:
                 # Last entry in file, length of -1 will make read() gobble
                 self._entries_index[id] = (start, -1)
@@ -140,15 +142,15 @@ class LazyBibDatabase(BibDatabase):
         assert len(self._parser.bib_database.entries) == 0
 
         # Store for later access
-        self._entries_dict[entry['ID']] = entry
+        self._entries_dict[entry["ID"]] = entry
 
         return entry
 
     def iter_entries(self, progress=False):
         if progress:
-            return tqdm(self._generate_entries(),
-                        total=len(self._entries_index),
-                        leave=False)
+            return tqdm(
+                self._generate_entries(), total=len(self._entries_index), leave=False
+            )
         else:
             return iter(self._generate_entries())
 
@@ -181,23 +183,24 @@ class BibCLIContext:
         self.config = DEFAULT_CONFIG
 
     def init(self, database, verbose, path):
-        self.config['path'] = Path(path)
+        self.config["path"] = Path(path)
         try:
-            config_fn = self.config['path'] / '.bibpy.yaml'
+            config_fn = self.config["path"] / ".bibpy.yaml"
             with open(config_fn) as f:
                 self.config.update(yaml.load(f))
         except FileNotFoundError:
             pass
 
         if database:
-            self.config['database'] = Path(database).resolve()
+            self.config["database"] = Path(database).resolve()
 
-        self.config['database'] = self.config['path'] / self.config['database']
+        self.config["database"] = self.config["path"] / self.config["database"]
 
         self.verbose = verbose
 
-        self.db = LazyBibDatabase(os.path.join(path, self.config['database']),
-                                  self.config)
+        self.db = LazyBibDatabase(
+            os.path.join(path, self.config["database"]), self.config
+        )
 
     def cmd_config(self, cmd):
         return self.config.get(cmd, {})
@@ -209,7 +212,7 @@ pass_context = click.make_pass_decorator(BibCLIContext, ensure=True)
 
 # A writer for converting entries back to strings
 writer = BibTexWriter()
-writer.indent = '\t'
+writer.indent = "\t"
 
 # A database for converting entries back to strings
 db = BibDatabase()
@@ -218,8 +221,9 @@ db = BibDatabase()
 def to_string(entry_or_entries):
     """Convert *entry_or_entries* to a string."""
     # Create a fake 'database' with only one entry.
-    db.entries = (entry_or_entries if isinstance(entry_or_entries, list) else
-                  [entry_or_entries])
+    db.entries = (
+        entry_or_entries if isinstance(entry_or_entries, list) else [entry_or_entries]
+    )
 
     try:
         [entry.stringify() for entry in db.entries]

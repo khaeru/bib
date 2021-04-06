@@ -3,9 +3,9 @@ import click
 from ..util import pass_context
 
 
-@click.command('list')
-@click.argument('field')
-@click.option('--sort', is_flag=True)
+@click.command("list")
+@click.argument("field")
+@click.option("--sort", is_flag=True)
 @pass_context
 def list_command(ctx, field, sort):
     """List all unique values of FIELD."""
@@ -16,4 +16,4 @@ def list_command(ctx, field, sort):
     if sort:
         values = sorted(values)
 
-    print('\n'.join(values))
+    print("\n".join(values))

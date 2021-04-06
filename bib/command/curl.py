@@ -12,11 +12,11 @@ def curl(ctx):
     arguments --url, --output, and --time-cond. This output can be piped
     to
     """
-    template = '\n'.join(['url="{0}"', 'output="{1}"', 'time-cond {1} '])
+    template = "\n".join(['url="{0}"', 'output="{1}"', "time-cond {1} "])
 
     for e in ctx.db.entries:
-        url = e.get('url', None)
-        localfile = e.get('localfile', None)
+        url = e.get("url", None)
+        localfile = e.get("localfile", None)
         if url is None or localfile is None:
             continue
         print(template.format(url, localfile[0]))

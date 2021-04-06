@@ -4,9 +4,13 @@ from ..util import pass_context
 
 
 @click.command()
-@click.option('--exclude-from', 'exclude', type=click.File('r'),
-              help='Also omit keys from this file; one per line.')
-@click.argument('other', type=click.Path(exists=True))
+@click.option(
+    "--exclude-from",
+    "exclude",
+    type=click.File("r"),
+    help="Also omit keys from this file; one per line.",
+)
+@click.argument("other", type=click.Path(exists=True))
 @pass_context
 def diff(ctx, other, exclude):
     """Print keys in the database but not in OTHER."""
@@ -18,4 +22,4 @@ def diff(ctx, other, exclude):
     if exclude:
         keys -= set(exclude.read().split())
 
-    print(*sorted(keys), sep='\n')
+    print(*sorted(keys), sep="\n")

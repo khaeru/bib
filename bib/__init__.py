@@ -36,12 +36,21 @@ from .util import pass_context
 
 
 @click.group(help=__doc__)
-@click.option('--database', type=click.Path('r'), metavar='FILE',
-              help='Filename of the BibTeX database.')
-@click.option('--verbose', is_flag=True, help='Print detailed output.')
-@click.option('--path', type=click.Path('r'), metavar='DIR',
-              envvar='BIBPY_PATH', default='.',
-              help='Directory containing the database and/or .bibpy.yaml.')
+@click.option(
+    "--database",
+    type=click.Path("r"),
+    metavar="FILE",
+    help="Filename of the BibTeX database.",
+)
+@click.option("--verbose", is_flag=True, help="Print detailed output.")
+@click.option(
+    "--path",
+    type=click.Path("r"),
+    metavar="DIR",
+    envvar="BIBPY_PATH",
+    default=".",
+    help="Directory containing the database and/or .bibpy.yaml.",
+)
 @pass_context
 def cli(ctx, database, verbose, path):
     # Initialize the context (load the database)

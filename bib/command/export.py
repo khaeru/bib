@@ -7,14 +7,16 @@ from ..util import pass_context, to_string
 
 
 @click.command()
-@click.argument('TARGET', type=click.Path())
-@click.argument('KEYS', nargs=-1)
-@click.option('--keys-file', type=click.File('r'), metavar='KEYFILE',
-              help='Also read keys from file, one per line.')
-@click.option('--force/-f', is_flag=True,
-              help='Overwrite TARGET if it exists.')
-@click.option('--strict', is_flag=True,
-              help='Require all KEYS to be found.')
+@click.argument("TARGET", type=click.Path())
+@click.argument("KEYS", nargs=-1)
+@click.option(
+    "--keys-file",
+    type=click.File("r"),
+    metavar="KEYFILE",
+    help="Also read keys from file, one per line.",
+)
+@click.option("--force/-f", is_flag=True, help="Overwrite TARGET if it exists.")
+@click.option("--strict", is_flag=True, help="Require all KEYS to be found.")
 @pass_context
 def export(ctx, target, keys, keys_file, force, strict):
     """Export entries with given KEYS to TARGET.
@@ -35,17 +37,17 @@ def export(ctx, target, keys, keys_file, force, strict):
 
         entry = ctx.db.get_entry(key)
         entries.append(entry)
-        keys.remove(entry['ID'])
+        keys.remove(entry["ID"])
 
-        crossref = entry.get('crossref', None)
+        crossref = entry.get("crossref", None)
         if crossref:
             entries.append(ctx.db.get_entry(crossref))
 
     if strict and len(keys):
-        raise click.ClickException('did not find keys %r' % keys)
+        raise click.ClickException("did not find keys %r" % keys)
 
     if Path(target).exists() and not force:
         raise FileExistsError
 
-    with (stdout if target == '-' else open(target, 'w')) as f:
+    with (stdout if target == "-" else open(target, "w")) as f:
         f.write(to_string(entries))
