@@ -17,6 +17,7 @@ dependencies = [
   "pythondialog",
   "PyYAML",
   "tqdm",
+  "xdg-base-dirs",
 ]
 urls = {homepage = "https://github.com/khaeru/sdmx"}
 scripts = {bib = "bib:cli"}

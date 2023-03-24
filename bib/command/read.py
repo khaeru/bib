@@ -4,13 +4,12 @@ from pathlib import Path
 from subprocess import DEVNULL, run
 from sys import stdout
 
-from bibtexparser.customization import author
 import click
+from bibtexparser.customization import author
 from click import ClickException
-from xdg.BaseDirectory import xdg_config_home
+from xdg_base_dirs import xdg_config_home
 
 from ..util import pass_context
-
 
 note_string = """Content-Type: text/x-zim-wiki
 Wiki-Format: zim 0.4
@@ -82,7 +81,7 @@ def read_command(ctx, key, clock, note):
 
     if note:
         # Read the ZIM configuration and find the path of the default notebook
-        zim_cfg_path = Path(xdg_config_home, "zim", "notebooks.list")
+        zim_cfg_path = xdg_config_home().joinpath("zim", "notebooks.list")
         zim_cfg = ConfigParser()
         zim_cfg.read(zim_cfg_path)
         nb_path = Path(zim_cfg["NotebookList"]["Default"]).expanduser()
