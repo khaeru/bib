@@ -78,7 +78,22 @@ class LazyBibDatabase(BibDatabase):
     entry_re = re.compile(rb"^\s*@([^{]*){([^,}]*)", re.MULTILINE)
 
     def __init__(self, path, config):
-        super(LazyBibDatabase, self).__init__()
+        # To ##### from BibDatabase.__init__()
+
+        # super(LazyBibDatabase, self).__init__()
+        self._entries_dict = {}
+        # List of BibTeX comment (`@comment{...}`) blocks.
+        self.comments = []
+        # OrderedDict of BibTeX string definitions (`@string{...}`). In order of
+        # definition.
+        self.strings = OrderedDict()
+        #: List of BibTeX preamble (`@preamble{...}`) blocks.
+        self.preambles = []
+
+        #: List of fields that should not be updated when resolving crossrefs
+        self._not_updated_by_crossref = ["_FROM_CROSSREF"]
+
+        #####
 
         # Database file
         self._file = open(path, "rb")
@@ -96,6 +111,10 @@ class LazyBibDatabase(BibDatabase):
             ignore_nonstandard_types=False,
             customization=lambda r: BibItem(r, self.keywords.update, config),
         )
+
+    @property
+    def entries(self):
+        yield from self._generate_entries()
 
     def _index(self):
         """Index the database."""
