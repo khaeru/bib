@@ -20,9 +20,7 @@ DEFAULT_CONFIG = {
 class BibItem(dict):
     """Biliography item.
 
-    bibtexparser uses dict() internally. This class adds some simple
-    functionality.
-
+    bibtexparser uses dict() internally. This class adds some simple functionality.
     """
 
     def __init__(self, record, add_keywords, config):
@@ -155,8 +153,8 @@ class LazyBibDatabase(BibDatabase):
         # Parse the entry
         self._parser.parse(self._file.read(length))
 
-        # bibtexparser.bparser.BibTexParser uses an internal BibDatabase that
-        # is not emptied for successive calls to parse(). Empty it.
+        # bibtexparser.bparser.BibTexParser uses an internal BibDatabase that is not
+        # emptied for successive calls to parse(). Empty it.
         entry = self._parser.bib_database.entries.pop()
         assert len(self._parser.bib_database.entries) == 0
 
