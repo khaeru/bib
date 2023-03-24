@@ -1,15 +1,15 @@
 import mmap
 import os
-from pathlib import Path
 import re
+from collections import OrderedDict
+from pathlib import Path
 
+import click
+import yaml
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.bwriter import BibTexWriter
-import click
 from tqdm import tqdm
-import yaml
-
 
 DEFAULT_CONFIG = {
     "keywords_sep": ",|;",
