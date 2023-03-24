@@ -1,0 +1,21 @@
+[build-system]
+requires = ["build", "setuptools-scm"]
+
+[tool.setuptools.packages]
+find = {}
+
+[project]
+name="bib"
+version = "1.0.0dev"
+license = {file = "LICENSE"}
+authors = [
+  {name = "Paul Natsuo Kishimoto", email = "mail@paul.kishimoto.name"}
+]
+dependencies = [
+  "bibtexparser",
+  "click",
+  "pythondialog",
+  "PyYAML",
+]
+urls = {homepage = "https://github.com/khaeru/sdmx"}
+scripts = {bib = "bib:cli"}
